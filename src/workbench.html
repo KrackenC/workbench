@@ -174,7 +174,7 @@ footer { color: var(--muted); font-size: 12.5px; font-family: var(--mono); }
     <div class="jobs" id="jobs"></div>
   </section>
 
-  <footer>Snapshot taken Nov 6, 2026. Ask Claude to refresh it when an app or routine changes.</footer>
+  <footer>Dates refreshed Nov 7, 2026. App dates update daily from GitHub; everything else updates when Claude changes an app or routine.</footer>
 </div>
 <div class="toast" id="toast" hidden></div>
 
@@ -196,23 +196,23 @@ var APPS = [
     repo: "https://github.com/KrackenC/frequency-lab" },
   { name: "Catchall", glyph: "Ca", color: "#a16207", kind: "Notes & capture",
     desc: "Brain-dump notes in the MindChuk style. The GitHub copy syncs between phone and PC through a private gist.",
-    updated: "2026-10-11", version: "", note: "Use the phone link as the main copy",
+    updated: "2026-10-12", version: "", note: "Use the phone link as the main copy",
     status: ["ok", "Active"],
     artifact: "https://claude.ai/artifact/Pk41DY6euh96mxKsrCC86Z",
     pages: "https://krackenc.github.io/catchall/",
     repo: "https://github.com/KrackenC/catchall" },
   { name: "Back Bar", glyph: "BB", color: "#0f766e", kind: "Cocktail recipes",
     desc: "Stock a virtual shelf (two shelves supported) and see which recipes are ready or almost ready to make.",
-    updated: "2026-10-08", version: "", note: "246 recipes · new drinks collected weekly",
+    updated: "2026-11-02", version: "", note: "246 recipes · new drinks collected weekly",
     status: ["ok", "Active"],
     artifact: "https://claude.ai/code/artifact/98b21866-61aa-4e5c-b622-193e1ce8d914",
     pages: "https://krackenc.github.io/back-bar/",
     repo: "https://github.com/KrackenC/back-bar",
     extra: { label: "Pending drinks", href: "https://krackenc.github.io/back-bar/pending/" } },
   { name: "Katana Jr", glyph: "KJ", color: "#be123c", kind: "Flight checklist",
-    desc: "Step, List and Card views for flying the Katana Jr dual-deploy on an EasyMini altimeter.",
-    updated: "2026-09-21", version: "mirror v1", note: "Untouched since the mirror went up",
-    status: ["idle", "Resting"],
+    desc: "Pre-flight and recovery checklist for flying the Katana Jr dual-deploy on an EasyMini altimeter.",
+    updated: "2026-10-06", version: "mirror v1", note: "Step, List and Card views · wake lock",
+    status: ["ok", "Active"],
     artifact: "https://claude.ai/artifact/NWjZjXuDaoDkG2vKpN5cyn",
     pages: "https://krackenc.github.io/Katana-Jr/",
     repo: "https://github.com/KrackenC/Katana-Jr" }
@@ -256,6 +256,8 @@ function ccLink(prompt) {
   return "claude-cli://open?cwd=" + encodeURIComponent(CC_HOME) + (prompt ? "&q=" + encodeURIComponent(prompt) : "");
 }
 document.getElementById("new-cc").href = ccLink("");
+
+APPS.sort(function (a, b) { return a.updated < b.updated ? 1 : a.updated > b.updated ? -1 : 0; });
 
 document.getElementById("apps").innerHTML = APPS.map(function (a, i) {
   return '<article class="app" style="--c:' + a.color + '">' +

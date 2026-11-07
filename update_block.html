@@ -1,0 +1,101 @@
+
+<div id="__update-banner" style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#101820;color:#e7eef5;font:600 14px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -2px 12px rgba(0,0,0,.4);">
+  <span id="__update-msg">A newer version of __APP__ is available.</span>
+  <span id="__update-actions" style="display:flex;gap:8px;flex-shrink:0;">
+    <button id="__update-btn" style="font:700 13px/1 -apple-system,sans-serif;background:#ff7a33;color:#1c0d04;border:0;border-radius:4px;padding:8px 14px;cursor:pointer;">Update</button>
+    <button id="__dismiss-btn" style="font:600 13px/1 -apple-system,sans-serif;background:transparent;color:#93a6b8;border:1px solid #324459;border-radius:4px;padding:8px 14px;cursor:pointer;">Later</button>
+  </span>
+</div>
+
+<script>
+/* Update check. Found on launch or when the app comes back to the front, a new version installs
+   itself unless the person is in the middle of something; otherwise the Update button is offered.
+   Phones swap the page in place (never navigate: a reload or URL change once handed an iPhone
+   Home Screen app a fresh, empty storage container). Only a page that really is the announced
+   version is used, and the browser's stored copy is refreshed so the next launch opens it too. */
+(function () {
+  var CURRENT_VERSION = "__VERSION__";
+  var VERSION_KEY = "version";
+  var banner = document.getElementById('__update-banner');
+  var msg = document.getElementById('__update-msg');
+  var actions = document.getElementById('__update-actions');
+  var updateBtn = document.getElementById('__update-btn');
+  var dismissBtn = document.getElementById('__dismiss-btn');
+  var DEFAULT_MSG = msg.textContent;
+  var lastCheck = 0, applying = false;
+  var isPhone = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+
+  function busy() {
+    var a = document.activeElement;
+    if (document.querySelector('dialog[open]')) return true;
+    if (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && a.value) return true;
+    try { return !!(false); } catch (e) { return false; }
+  }
+  function showBanner() { banner.style.display = 'flex'; }
+  function applyUpdate(want) {
+    if (applying) return Promise.resolve(false);
+    applying = true;
+    return fetch('./?_=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+      .then(function (html) {
+        if (want && html.indexOf('CURRENT_VERSION = "' + want + '"') < 0) throw new Error('not live yet');
+        try { sessionStorage.setItem('__updatedTo', want || ''); } catch (e) {}
+        return fetch('./', { cache: 'reload' }).then(function (r) { return r.ok ? r.text() : ''; }, function () { return ''; })
+          .then(function (stored) {
+            if (!isPhone && stored.indexOf('CURRENT_VERSION = "' + want + '"') >= 0) { location.reload(); return true; }
+            document.open(); document.write(html); document.close();
+            return true;
+          });
+      })
+      .catch(function () { applying = false; return false; });
+  }
+  function checkVersion(auto) {
+    lastCheck = Date.now();
+    return fetch('./version.json?_=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        var v = data && data[VERSION_KEY];
+        if (!v || v === CURRENT_VERSION) return false;
+        if (auto === true && !busy()) return applyUpdate(v).then(function (ok) { if (!ok) { banner.dataset.want = v; showBanner(); } return true; });
+        banner.dataset.want = v;
+        showBanner();
+        return true;
+      })
+      .catch(function () { return null; });
+  }
+  window.__appVersion = CURRENT_VERSION;
+  window.__checkForUpdate = checkVersion;
+
+  updateBtn.addEventListener('click', function () {
+    updateBtn.textContent = 'Updating…';
+    updateBtn.disabled = true;
+    applyUpdate(banner.dataset.want).then(function (ok) {
+      if (ok) return;
+      updateBtn.textContent = 'Update';
+      updateBtn.disabled = false;
+      msg.textContent = 'The new version is still reaching GitHub. Try again in a minute.';
+    });
+  });
+  dismissBtn.addEventListener('click', function () { banner.style.display = 'none'; msg.textContent = DEFAULT_MSG; });
+
+  try {
+    var to = sessionStorage.getItem('__updatedTo');
+    if (to) {
+      sessionStorage.removeItem('__updatedTo');
+      if (to === CURRENT_VERSION) {
+        msg.textContent = '__APP__ updated to the latest version.';
+        actions.style.display = 'none';
+        showBanner();
+        setTimeout(function () { banner.style.display = 'none'; actions.style.display = 'flex'; msg.textContent = DEFAULT_MSG; }, 4000);
+      }
+    }
+  } catch (e) {}
+
+  if (document.readyState === 'complete') checkVersion(true);
+  else addEventListener('load', function () { checkVersion(true); });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) checkVersion(true); });
+  addEventListener('focus', function () { if (Date.now() - lastCheck > 60000) checkVersion(); });
+  clearInterval(window.__updateTimer);
+  window.__updateTimer = setInterval(checkVersion, 15 * 60 * 1000);
+})();
+</script>

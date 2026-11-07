@@ -1,10 +1,8 @@
-import sys, json, re, zlib, struct
-src, ic, site, ver = sys.argv[1:5]
+import sys, os, json, re, zlib, struct, subprocess
+src, site, ver = sys.argv[1:4]
 page = open(src).read()
-lines = open(ic).read().split('\n')
-block = '\n'.join(lines[2871:])  # update banner block from ignition-check mirror (line 2872 on)
-block = block.replace('Ignition Check', 'The Workbench')
-block = re.sub(r'var CURRENT_VERSION = "\d+";', 'var CURRENT_VERSION = "%s";' % ver, block)
+here = os.path.dirname(os.path.abspath(__file__))
+block = open(os.path.join(here, 'update_block.html')).read().replace('__APP__', 'The Workbench').replace('__VERSION__', ver)  # shared mirror update banner
 assert block.count('CURRENT_VERSION = "%s"' % ver) == 1
 head = ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
  '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
@@ -29,7 +27,8 @@ def png(n, path):
     raw = zlib.compress(b''.join(rows), 9)
     ch = lambda t, d: struct.pack('>I', len(d)) + t + d + struct.pack('>I', zlib.crc32(t + d) & 0xffffffff)
     open(path, 'wb').write(b'\x89PNG\r\n\x1a\n' + ch(b'IHDR', struct.pack('>IIBBBBB', n, n, 8, 2, 0, 0, 0)) + ch(b'IDAT', raw) + ch(b'IEND', b''))
-import subprocess, os; subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'make_icon.py'), site], check=True)  # HAL-eye icons
+if not all(os.path.exists(os.path.join(site, f)) for f in ('icon-512.png', 'icon-192.png', 'apple-touch-icon.png', 'favicon.png')):
+    subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'make_icon.py'), site], check=True)  # HAL-eye icons
 json.dump({"name": "The Workbench", "short_name": "Workbench", "id": "./", "start_url": "./", "scope": "./",
   "display": "standalone", "background_color": "#eef1f4", "theme_color": "#16181c",
   "description": "Launcher for in-progress apps and automated tasks",
