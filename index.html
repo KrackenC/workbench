@@ -1,0 +1,407 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="workbench-version" content="1"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="favicon.png" type="image/png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Workbench"><meta name="theme-color" content="#2b55c9"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<title>The Workbench</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a workshop board. Apps hang as tools on a pegboard grid; automations run below as a job ticket list. */
+:root {
+  --bg: #eef1f4;
+  --panel: #ffffff;
+  --ink: #18202a;
+  --muted: #5b6673;
+  --line: #d5dbe2;
+  --accent: #2b55c9;
+  --accent-ink: #ffffff;
+  --peg: #c9d1da;
+  --ok: #1d7a4a;
+  --ok-bg: #e2f3ea;
+  --warn: #9a5b00;
+  --warn-bg: #fbefd9;
+  --idle: #5b6673;
+  --idle-bg: #e7ebef;
+  --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11161d; --panel: #18202a; --ink: #e7ecf2; --muted: #95a1ae; --line: #2a3542;
+    --accent: #7a9cff; --accent-ink: #0d1424; --peg: #222c38;
+    --ok: #6fd39d; --ok-bg: #173327; --warn: #f0b860; --warn-bg: #3a2b12; --idle: #95a1ae; --idle-bg: #232d39;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11161d; --panel: #18202a; --ink: #e7ecf2; --muted: #95a1ae; --line: #2a3542;
+  --accent: #7a9cff; --accent-ink: #0d1424; --peg: #222c38;
+  --ok: #6fd39d; --ok-bg: #173327; --warn: #f0b860; --warn-bg: #3a2b12; --idle: #95a1ae; --idle-bg: #232d39;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  background-image: radial-gradient(var(--peg) 1.4px, transparent 1.5px);
+  background-size: 22px 22px;
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding-block: 32px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  gap: 40px;
+}
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(30px, 5vw, 44px); line-height: 1.05; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.sub { color: var(--muted); margin: 6px 0 0; max-width: 60ch; }
+.tally { display: flex; gap: 8px; flex-wrap: wrap; font-family: var(--mono); font-size: 12.5px; }
+.tally span { background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; }
+.tally b { font-weight: 500; color: var(--accent); }
+
+h2 { font-family: var(--display); font-weight: 700; font-size: 22px; margin: 0; }
+.sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.sec-head p { margin: 0; color: var(--muted); font-size: 13.5px; }
+
+.apps { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.app {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 18px 18px 16px;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 10px;
+  position: relative;
+  min-width: 0;
+}
+.app::before { /* the peg hole it hangs from */
+  content: ""; position: absolute; top: 9px; left: 50%; width: 10px; height: 10px; margin-left: -5px;
+  border-radius: 50%; background: var(--bg); box-shadow: inset 0 1px 2px rgba(0,0,0,.25);
+}
+.app-top { display: flex; align-items: center; gap: 12px; }
+.glyph {
+  width: 40px; height: 40px; border-radius: 9px; flex: none;
+  display: grid; place-items: center;
+  font-family: var(--display); font-weight: 700; font-size: 17px; color: #fff;
+  background: var(--c);
+}
+.app h3 { font-family: var(--display); font-weight: 700; font-size: 19px; margin: 0; line-height: 1.15; }
+.kind { font-size: 12.5px; color: var(--muted); }
+.desc { margin: 0; font-size: 14px; color: var(--ink); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-family: var(--mono); font-size: 12px; color: var(--muted); align-content: start; }
+.meta .v { color: var(--ink); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; border-top: 1px dashed var(--line); padding-block-start: 12px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font: 500 13.5px/1 var(--body);
+  text-decoration: none; border-radius: 7px; padding: 9px 12px;
+  border: 1px solid var(--line); color: var(--ink); background: transparent; cursor: pointer;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.08); color: var(--accent-ink); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn.small { padding: 7px 9px; font-size: 12.5px; }
+
+.pill { display: inline-block; font: 500 11.5px/1 var(--mono); padding: 5px 8px; border-radius: 999px; letter-spacing: .03em; text-transform: uppercase; white-space: nowrap; }
+.pill.ok { color: var(--ok); background: var(--ok-bg); }
+.pill.warn { color: var(--warn); background: var(--warn-bg); }
+.pill.idle { color: var(--idle); background: var(--idle-bg); }
+.app .pill { margin-left: auto; align-self: start; }
+
+.jobs { display: grid; gap: 12px; }
+.job {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  display: grid; grid-template-columns: 170px 1fr; min-width: 0; overflow: hidden;
+}
+.when {
+  border-right: 1px dashed var(--line); padding: 16px;
+  font-family: var(--mono); font-size: 12.5px; color: var(--muted);
+  display: grid; gap: 4px; align-content: start;
+}
+.when .big { font-family: var(--display); font-weight: 700; font-size: 17px; color: var(--ink); line-height: 1.2; }
+.job-body { padding: 16px 18px; display: grid; gap: 8px; min-width: 0; }
+.job-title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.job-title h3 { font-family: var(--display); font-weight: 700; font-size: 17px; margin: 0; }
+.job-body p { margin: 0; font-size: 14px; max-width: 75ch; }
+.job-facts { display: flex; flex-wrap: wrap; gap: 6px 18px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.job-facts .v { color: var(--ink); }
+.tag { font: 500 11px/1 var(--mono); color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 4px 6px; text-transform: uppercase; letter-spacing: .05em; }
+
+footer { color: var(--muted); font-size: 12.5px; font-family: var(--mono); }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 13px; }
+
+@media (max-width: 560px) {
+  .job { grid-template-columns: 1fr; }
+  .when { border-right: 0; border-bottom: 1px dashed var(--line); grid-auto-flow: column; justify-content: start; gap: 4px 14px; align-items: baseline; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>The Workbench</h1>
+      <p class="sub">Every app in progress, one tap away, plus the jobs that run on their own.</p>
+    </div>
+    <div class="tally" id="tally"></div>
+  </header>
+
+  <section aria-labelledby="apps-h">
+    <div class="sec-head">
+      <h2 id="apps-h">Apps on the bench</h2>
+      <p>Most recently worked on first. “Open” needs a Claude login; “Phone link” works for anyone.</p>
+    </div>
+    <div class="apps" id="apps"></div>
+  </section>
+
+  <section aria-labelledby="jobs-h">
+    <div class="sec-head">
+      <h2 id="jobs-h">Automated tasks</h2>
+      <p>Scheduled cloud routines, standing rules Claude follows, and sync built into the apps.</p>
+    </div>
+    <div class="jobs" id="jobs"></div>
+  </section>
+
+  <footer>Snapshot taken Nov 6, 2026. Ask Claude to refresh it when an app or routine changes.</footer>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+var APPS = [
+  { name: "Ignition Check", glyph: "IC", color: "#c2410c", kind: "Model rocketry",
+    desc: "Motor lookup across the fleet, CATO Ledger failure reports, and a Motor Swap Map for cross-brand substitutes.",
+    updated: "2026-11-06", version: "artifact v36 · mirror v37", note: "175 rockets after the Excel resync",
+    status: ["ok", "Active"],
+    artifact: "https://claude.ai/artifact/DgtH9jPsJ9aF6cPb7CMtiB",
+    pages: "https://krackenc.github.io/ignition-check/",
+    repo: "https://github.com/KrackenC/ignition-check" },
+  { name: "Frequency Lab", glyph: "FL", color: "#6d28d9", kind: "Tone generator",
+    desc: "Binaural, isochronic and noise presets, each graded by strength of evidence with citations, plus loop playlists.",
+    updated: "2026-10-13", version: "", note: "Most Played, Loop Playlist, Adaptive Ambience",
+    status: ["ok", "Active"],
+    artifact: "https://claude.ai/code/artifact/0ad98159-114d-47ce-b649-7cb21fa26118",
+    pages: "https://krackenc.github.io/frequency-lab/",
+    repo: "https://github.com/KrackenC/frequency-lab" },
+  { name: "Catchall", glyph: "Ca", color: "#a16207", kind: "Notes & capture",
+    desc: "Brain-dump notes in the MindChuk style. The GitHub copy syncs between phone and PC through a private gist.",
+    updated: "2026-10-11", version: "", note: "Use the phone link as the main copy",
+    status: ["ok", "Active"],
+    artifact: "https://claude.ai/artifact/Pk41DY6euh96mxKsrCC86Z",
+    pages: "https://krackenc.github.io/catchall/",
+    repo: "https://github.com/KrackenC/catchall" },
+  { name: "Back Bar", glyph: "BB", color: "#0f766e", kind: "Cocktail recipes",
+    desc: "Stock a virtual shelf (two shelves supported) and see which recipes are ready or almost ready to make.",
+    updated: "2026-10-08", version: "", note: "246 recipes · new drinks collected weekly",
+    status: ["ok", "Active"],
+    artifact: "https://claude.ai/code/artifact/98b21866-61aa-4e5c-b622-193e1ce8d914",
+    pages: "https://krackenc.github.io/back-bar/",
+    repo: "https://github.com/KrackenC/back-bar",
+    extra: { label: "Pending drinks", href: "https://krackenc.github.io/back-bar/pending/" } },
+  { name: "Katana Jr", glyph: "KJ", color: "#be123c", kind: "Flight checklist",
+    desc: "Step, List and Card views for flying the Katana Jr dual-deploy on an EasyMini altimeter.",
+    updated: "2026-09-21", version: "mirror v1", note: "Untouched since the mirror went up",
+    status: ["idle", "Resting"],
+    artifact: "https://claude.ai/artifact/NWjZjXuDaoDkG2vKpN5cyn",
+    pages: "https://krackenc.github.io/Katana-Jr/",
+    repo: "https://github.com/KrackenC/Katana-Jr" }
+];
+
+var JOBS = [
+  { title: "Back Bar: collect 5 new drinks", type: "Scheduled routine", status: ["ok", "Last run succeeded"],
+    cron: { utcHour: 13, utcMin: 0, weekday: 5 },
+    desc: "Finds five drinks Back Bar doesn't have yet from free public sources, rewrites them in house style, writes image prompts, checks them, and pushes to pending/drinks.json. It never touches the live app; you release the batch yourself.",
+    facts: [["Last run", "Nov 6, 2026"], ["Next run", "2026-11-13T13:06:57Z"], ["Model", "Sonnet 5"], ["Repo", "KrackenC/back-bar"]],
+    links: [{ label: "Review pending drinks", href: "https://krackenc.github.io/back-bar/pending/" }, { label: "Manage routines", href: "https://claude.ai/code/routines" }] },
+  { title: "GitHub Pages mirror sync", type: "Standing rule", status: ["ok", "On"],
+    when: ["After every", "app update"],
+    desc: "Whenever Claude updates one of these apps, it rebuilds the no-login copy, bumps version.json, pushes to GitHub and confirms the page is live. No need to ask.",
+    facts: [["Covers", "all 5 apps"], ["Trigger", "artifact publish"]],
+    links: [] },
+  { title: "Catchall phone ↔ PC sync", type: "Built into app", status: ["ok", "Running"],
+    when: ["Every 45 s", "and on edit"],
+    desc: "The GitHub copy pulls from your private gist on open, on focus and every 45 seconds, and pushes 1.2 seconds after you edit. Newest change wins.",
+    facts: [["Storage", "secret gist"], ["Deletes kept", "120 days"]],
+    links: [{ label: "Open Catchall", href: "https://krackenc.github.io/catchall/" }] },
+  { title: "Update banner on phone copies", type: "Built into app", status: ["ok", "Running"],
+    when: ["On open", "each mirror"],
+    desc: "Each GitHub copy checks its version.json and shows an Update / Later banner when a newer build has been pushed.",
+    facts: [["Covers", "all 5 mirrors"]],
+    links: [] }
+];
+
+var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+var DAYS = ["Sundays","Mondays","Tuesdays","Wednesdays","Thursdays","Fridays","Saturdays"];
+function fmtDate(iso) { var p = iso.split("-"); return MONTHS[+p[1]-1] + " " + (+p[2]) + ", " + p[0]; }
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]; }); }
+function ago(iso) {
+  var d = Math.round((new Date() - new Date(iso + "T12:00:00")) / 864e5);
+  return d <= 0 ? "today" : d === 1 ? "yesterday" : d + " days ago";
+}
+
+document.getElementById("apps").innerHTML = APPS.map(function (a, i) {
+  return '<article class="app" style="--c:' + a.color + '">' +
+    '<div class="app-top"><div class="glyph" aria-hidden="true">' + a.glyph + '</div>' +
+      '<div><h3>' + esc(a.name) + '</h3><div class="kind">' + esc(a.kind) + '</div></div>' +
+      '<span class="pill ' + a.status[0] + '">' + a.status[1] + '</span></div>' +
+    '<p class="desc">' + esc(a.desc) + '</p>' +
+    '<div class="meta"><span>Updated <span class="v">' + fmtDate(a.updated) + '</span> (' + ago(a.updated) + ')</span>' +
+      (a.version ? '<span class="v">' + esc(a.version) + '</span>' : '') +
+      '<span>' + esc(a.note) + '</span></div>' +
+    '<div class="actions">' +
+      '<a class="btn primary" href="' + a.artifact + '" target="_blank" rel="noopener">Open</a>' +
+      '<a class="btn" href="' + a.pages + '" target="_blank" rel="noopener">Phone link</a>' +
+      '<button class="btn small" type="button" id="copy-' + i + '" data-url="' + a.pages + '">Copy phone link</button>' +
+      '<a class="btn small" href="' + a.repo + '" target="_blank" rel="noopener">Repo</a>' +
+      (a.extra ? '<a class="btn small" href="' + a.extra.href + '" target="_blank" rel="noopener">' + esc(a.extra.label) + '</a>' : '') +
+    '</div></article>';
+}).join("");
+
+function whenFor(j) {
+  if (!j.cron) return '<span class="big">' + j.when[0] + '</span><span>' + j.when[1] + '</span>';
+  var ref = new Date(Date.UTC(2026, 10, 13, j.cron.utcHour, j.cron.utcMin)); // a Friday
+  var local = ref.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  var day = DAYS[ref.getDay()];
+  return '<span class="big">' + day + '</span><span>' + local + ' your time</span><span>13:00 UTC</span>';
+}
+function factVal(k, v) {
+  if (k === "Next run") {
+    var d = new Date(v);
+    return d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" }) + ", " + d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  }
+  return v;
+}
+document.getElementById("jobs").innerHTML = JOBS.map(function (j) {
+  return '<article class="job"><div class="when">' + whenFor(j) + '</div>' +
+    '<div class="job-body"><div class="job-title"><h3>' + esc(j.title) + '</h3>' +
+      '<span class="tag">' + j.type + '</span><span class="pill ' + j.status[0] + '">' + j.status[1] + '</span></div>' +
+    '<p>' + esc(j.desc) + '</p>' +
+    '<div class="job-facts">' + j.facts.map(function (f) { return '<span>' + f[0] + ' <span class="v">' + esc(factVal(f[0], f[1])) + '</span></span>'; }).join("") + '</div>' +
+    (j.links.length ? '<div class="actions" style="border-top:0;padding-block-start:4px">' + j.links.map(function (l) { return '<a class="btn small" href="' + l.href + '" target="_blank" rel="noopener">' + l.label + '</a>'; }).join("") + '</div>' : '') +
+    '</div></article>';
+}).join("");
+
+var sched = JOBS.filter(function (j) { return j.type === "Scheduled routine"; }).length;
+document.getElementById("tally").innerHTML =
+  '<span><b>' + APPS.length + '</b> apps</span><span><b>' + JOBS.length + '</b> automations</span><span><b>' + sched + '</b> on a schedule</span>';
+
+var toast = document.getElementById("toast"), tt;
+function say(msg) { toast.textContent = msg; toast.hidden = false; clearTimeout(tt); tt = setTimeout(function () { toast.hidden = true; }, 1800); }
+document.getElementById("apps").addEventListener("click", function (e) {
+  var b = e.target.closest("button[data-url]"); if (!b) return;
+  var url = b.getAttribute("data-url");
+  try {
+    navigator.clipboard.writeText(url).then(function () { say("Phone link copied"); }, function () { say(url); });
+  } catch (err) { say(url); }
+});
+</script>
+
+
+<div id="__update-banner" style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#101820;color:#e7eef5;font:600 14px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -2px 12px rgba(0,0,0,.4);">
+  <span id="__update-msg">A newer version of The Workbench is available.</span>
+  <span id="__update-actions" style="display:flex;gap:8px;flex-shrink:0;">
+    <button id="__update-btn" style="font:700 13px/1 -apple-system,sans-serif;background:#ff7a33;color:#1c0d04;border:0;border-radius:4px;padding:8px 14px;cursor:pointer;">Update</button>
+    <button id="__dismiss-btn" style="font:600 13px/1 -apple-system,sans-serif;background:transparent;color:#93a6b8;border:1px solid #324459;border-radius:4px;padding:8px 14px;cursor:pointer;">Later</button>
+  </span>
+</div>
+
+<script>
+/* Update check. Found on launch or when the app comes back to the front, a new version installs
+   itself unless the person is in the middle of something; otherwise the Update button is offered.
+   Phones swap the page in place (never navigate: a reload or URL change once handed an iPhone
+   Home Screen app a fresh, empty storage container). Only a page that really is the announced
+   version is used, and the browser's stored copy is refreshed so the next launch opens it too. */
+(function () {
+  var CURRENT_VERSION = "1";
+  var VERSION_KEY = "version";
+  var banner = document.getElementById('__update-banner');
+  var msg = document.getElementById('__update-msg');
+  var actions = document.getElementById('__update-actions');
+  var updateBtn = document.getElementById('__update-btn');
+  var dismissBtn = document.getElementById('__dismiss-btn');
+  var DEFAULT_MSG = msg.textContent;
+  var lastCheck = 0, applying = false;
+  var isPhone = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+
+  function busy() {
+    var a = document.activeElement;
+    if (document.querySelector('dialog[open]')) return true;
+    if (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && a.value) return true;
+    try { return !!(false); } catch (e) { return false; }
+  }
+  function showBanner() { banner.style.display = 'flex'; }
+  function applyUpdate(want) {
+    if (applying) return Promise.resolve(false);
+    applying = true;
+    return fetch('./?_=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+      .then(function (html) {
+        if (want && html.indexOf('CURRENT_VERSION = "' + want + '"') < 0) throw new Error('not live yet');
+        try { sessionStorage.setItem('__updatedTo', want || ''); } catch (e) {}
+        return fetch('./', { cache: 'reload' }).then(function (r) { return r.ok ? r.text() : ''; }, function () { return ''; })
+          .then(function (stored) {
+            if (!isPhone && stored.indexOf('CURRENT_VERSION = "' + want + '"') >= 0) { location.reload(); return true; }
+            document.open(); document.write(html); document.close();
+            return true;
+          });
+      })
+      .catch(function () { applying = false; return false; });
+  }
+  function checkVersion(auto) {
+    lastCheck = Date.now();
+    return fetch('./version.json?_=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        var v = data && data[VERSION_KEY];
+        if (!v || v === CURRENT_VERSION) return false;
+        if (auto === true && !busy()) return applyUpdate(v).then(function (ok) { if (!ok) { banner.dataset.want = v; showBanner(); } return true; });
+        banner.dataset.want = v;
+        showBanner();
+        return true;
+      })
+      .catch(function () { return null; });
+  }
+  window.__appVersion = CURRENT_VERSION;
+  window.__checkForUpdate = checkVersion;
+
+  updateBtn.addEventListener('click', function () {
+    updateBtn.textContent = 'Updating…';
+    updateBtn.disabled = true;
+    applyUpdate(banner.dataset.want).then(function (ok) {
+      if (ok) return;
+      updateBtn.textContent = 'Update';
+      updateBtn.disabled = false;
+      msg.textContent = 'The new version is still reaching GitHub. Try again in a minute.';
+    });
+  });
+  dismissBtn.addEventListener('click', function () { banner.style.display = 'none'; msg.textContent = DEFAULT_MSG; });
+
+  try {
+    var to = sessionStorage.getItem('__updatedTo');
+    if (to) {
+      sessionStorage.removeItem('__updatedTo');
+      if (to === CURRENT_VERSION) {
+        msg.textContent = 'The Workbench updated to the latest version.';
+        actions.style.display = 'none';
+        showBanner();
+        setTimeout(function () { banner.style.display = 'none'; actions.style.display = 'flex'; msg.textContent = DEFAULT_MSG; }, 4000);
+      }
+    }
+  } catch (e) {}
+
+  if (document.readyState === 'complete') checkVersion(true);
+  else addEventListener('load', function () { checkVersion(true); });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) checkVersion(true); });
+  addEventListener('focus', function () { if (Date.now() - lastCheck > 60000) checkVersion(); });
+  clearInterval(window.__updateTimer);
+  window.__updateTimer = setInterval(checkVersion, 15 * 60 * 1000);
+})();
+</script>
+</body></html>
