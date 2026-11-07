@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="workbench-version" content="8"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="favicon.png" type="image/png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Workbench"><meta name="theme-color" content="#16181c"><link rel="manifest" href="manifest.webmanifest"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="workbench-version" content="9"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="favicon.png" type="image/png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Workbench"><meta name="theme-color" content="#16181c"><link rel="manifest" href="manifest.webmanifest"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>The Workbench</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -137,7 +137,10 @@ h2 { font-family: var(--display); font-weight: 700; font-size: 22px; margin: 0; 
 .job-facts .v { color: var(--ink); }
 .tag { font: 500 11px/1 var(--mono); color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 4px 6px; text-transform: uppercase; letter-spacing: .05em; }
 
-footer { color: var(--muted); font-size: 12.5px; font-family: var(--mono); }
+footer { color: var(--muted); font-size: 12.5px; font-family: var(--mono); display: grid; gap: 8px; }
+footer p { margin: 0; }
+.ver-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.ver-row #ver-num { color: var(--ink); }
 .toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 13px; }
 
 @media (max-width: 560px) {
@@ -175,7 +178,10 @@ footer { color: var(--muted); font-size: 12.5px; font-family: var(--mono); }
     <div class="jobs" id="jobs"></div>
   </section>
 
-  <footer>Dates refreshed Nov 7, 2026. App dates update daily from GitHub; everything else updates when Claude changes an app or routine.</footer>
+  <footer>
+    <p>Dates refreshed Nov 7, 2026. App dates update daily from GitHub; everything else updates when Claude changes an app or routine.</p>
+    <p class="ver-row" id="ver-row" hidden>Version <span id="ver-num"></span>. Updates install themselves when you open or return to the app. <button class="btn small" type="button" id="check-upd">Check for updates</button> <span id="upd-status" role="status"></span></p>
+  </footer>
 </div>
 <div class="toast" id="toast" hidden></div>
 
@@ -327,6 +333,22 @@ document.getElementById("apps").addEventListener("click", function (e) {
     navigator.clipboard.writeText(url).then(function () { say("Phone link copied"); }, function () { say(url); });
   } catch (err) { say(url); }
 });
+
+// Version + manual update check. Only the GitHub/desktop copy has the updater, so the claude.ai copy keeps this hidden.
+addEventListener("load", function () {
+  if (!window.__checkForUpdate) return;
+  document.getElementById("ver-num").textContent = window.__appVersion;
+  document.getElementById("ver-row").hidden = false;
+  var btn = document.getElementById("check-upd"), status = document.getElementById("upd-status");
+  btn.addEventListener("click", function () {
+    btn.disabled = true;
+    status.textContent = "Checking…";
+    window.__checkForUpdate(true).then(function (found) {
+      btn.disabled = false;
+      status.textContent = found === false ? "You have the latest version." : found === null ? "Couldn't reach GitHub. Check your connection." : "New version found.";
+    });
+  });
+});
 </script>
 
 
@@ -345,7 +367,7 @@ document.getElementById("apps").addEventListener("click", function (e) {
    Home Screen app a fresh, empty storage container). Only a page that really is the announced
    version is used, and the browser's stored copy is refreshed so the next launch opens it too. */
 (function () {
-  var CURRENT_VERSION = "8";
+  var CURRENT_VERSION = "9";
   var VERSION_KEY = "version";
   var banner = document.getElementById('__update-banner');
   var msg = document.getElementById('__update-msg');

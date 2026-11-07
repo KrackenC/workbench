@@ -29,7 +29,14 @@ def png(n, path):
     open(path, 'wb').write(b'\x89PNG\r\n\x1a\n' + ch(b'IHDR', struct.pack('>IIBBBBB', n, n, 8, 2, 0, 0, 0)) + ch(b'IDAT', raw) + ch(b'IEND', b''))
 if not all(os.path.exists(os.path.join(site, f)) for f in ('icon-512.png', 'icon-256.png', 'icon-192.png', 'apple-touch-icon.png', 'favicon.png')):
     subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'make_icon.py'), site], check=True)  # HAL-eye icons
-json.dump({"name": "The Workbench", "short_name": "Workbench", "id": "./", "start_url": "./", "scope": "./",
+# Installed desktop apps recognise this app by id/start_url/scope and pick up new icons and names
+# from the manifest on their own. Changing any of these makes installs orphaned, needing a reinstall.
+IDENTITY = {"id": "./", "start_url": "./", "scope": "./"}
+mpath = os.path.join(site, 'manifest.webmanifest')
+if os.path.exists(mpath):
+    old = json.load(open(mpath))
+    assert all(old.get(k) == v for k, v in IDENTITY.items()), 'manifest identity changed: installed apps would need reinstalling'
+json.dump({"name": "The Workbench", "short_name": "Workbench", **IDENTITY,
   "display": "standalone", "background_color": "#eef1f4", "theme_color": "#16181c",
   "description": "Launcher for in-progress apps and automated tasks",
   "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},

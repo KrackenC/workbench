@@ -136,7 +136,10 @@ h2 { font-family: var(--display); font-weight: 700; font-size: 22px; margin: 0; 
 .job-facts .v { color: var(--ink); }
 .tag { font: 500 11px/1 var(--mono); color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 4px 6px; text-transform: uppercase; letter-spacing: .05em; }
 
-footer { color: var(--muted); font-size: 12.5px; font-family: var(--mono); }
+footer { color: var(--muted); font-size: 12.5px; font-family: var(--mono); display: grid; gap: 8px; }
+footer p { margin: 0; }
+.ver-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.ver-row #ver-num { color: var(--ink); }
 .toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 13px; }
 
 @media (max-width: 560px) {
@@ -174,7 +177,10 @@ footer { color: var(--muted); font-size: 12.5px; font-family: var(--mono); }
     <div class="jobs" id="jobs"></div>
   </section>
 
-  <footer>Dates refreshed Nov 7, 2026. App dates update daily from GitHub; everything else updates when Claude changes an app or routine.</footer>
+  <footer>
+    <p>Dates refreshed Nov 7, 2026. App dates update daily from GitHub; everything else updates when Claude changes an app or routine.</p>
+    <p class="ver-row" id="ver-row" hidden>Version <span id="ver-num"></span>. Updates install themselves when you open or return to the app. <button class="btn small" type="button" id="check-upd">Check for updates</button> <span id="upd-status" role="status"></span></p>
+  </footer>
 </div>
 <div class="toast" id="toast" hidden></div>
 
@@ -325,5 +331,21 @@ document.getElementById("apps").addEventListener("click", function (e) {
   try {
     navigator.clipboard.writeText(url).then(function () { say("Phone link copied"); }, function () { say(url); });
   } catch (err) { say(url); }
+});
+
+// Version + manual update check. Only the GitHub/desktop copy has the updater, so the claude.ai copy keeps this hidden.
+addEventListener("load", function () {
+  if (!window.__checkForUpdate) return;
+  document.getElementById("ver-num").textContent = window.__appVersion;
+  document.getElementById("ver-row").hidden = false;
+  var btn = document.getElementById("check-upd"), status = document.getElementById("upd-status");
+  btn.addEventListener("click", function () {
+    btn.disabled = true;
+    status.textContent = "Checking…";
+    window.__checkForUpdate(true).then(function (found) {
+      btn.disabled = false;
+      status.textContent = found === false ? "You have the latest version." : found === null ? "Couldn't reach GitHub. Check your connection." : "New version found.";
+    });
+  });
 });
 </script>
