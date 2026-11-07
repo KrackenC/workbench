@@ -27,11 +27,13 @@ def png(n, path):
     raw = zlib.compress(b''.join(rows), 9)
     ch = lambda t, d: struct.pack('>I', len(d)) + t + d + struct.pack('>I', zlib.crc32(t + d) & 0xffffffff)
     open(path, 'wb').write(b'\x89PNG\r\n\x1a\n' + ch(b'IHDR', struct.pack('>IIBBBBB', n, n, 8, 2, 0, 0, 0)) + ch(b'IDAT', raw) + ch(b'IEND', b''))
-if not all(os.path.exists(os.path.join(site, f)) for f in ('icon-512.png', 'icon-192.png', 'apple-touch-icon.png', 'favicon.png')):
+if not all(os.path.exists(os.path.join(site, f)) for f in ('icon-512.png', 'icon-256.png', 'icon-192.png', 'apple-touch-icon.png', 'favicon.png')):
     subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'make_icon.py'), site], check=True)  # HAL-eye icons
 json.dump({"name": "The Workbench", "short_name": "Workbench", "id": "./", "start_url": "./", "scope": "./",
   "display": "standalone", "background_color": "#eef1f4", "theme_color": "#16181c",
   "description": "Launcher for in-progress apps and automated tasks",
-  "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
-            {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}]},
+  "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+            {"src": "icon-256.png", "sizes": "256x256", "type": "image/png", "purpose": "any"},
+            {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+            {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}]},
   open(site + '/manifest.webmanifest', 'w'), indent=2)

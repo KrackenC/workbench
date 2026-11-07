@@ -55,5 +55,5 @@ def png(n, path, ss=3):
                            + ch(b'IDAT', zlib.compress(b''.join(rows), 9)) + ch(b'IEND', b''))
 
 out = sys.argv[1] if len(sys.argv) > 1 else '.'
-for n, name in [(512, 'icon-512.png'), (192, 'icon-192.png'), (180, 'apple-touch-icon.png'), (64, 'favicon.png')]:
+for n, name in [(512, 'icon-512.png'), (256, 'icon-256.png'), (192, 'icon-192.png'), (180, 'apple-touch-icon.png'), (64, 'favicon.png')]:
     png(n, out + '/' + name)
