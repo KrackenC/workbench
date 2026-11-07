@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="workbench-version" content="6"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="favicon.png" type="image/png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Workbench"><meta name="theme-color" content="#16181c"><link rel="manifest" href="manifest.webmanifest"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="workbench-version" content="7"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="favicon.png" type="image/png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Workbench"><meta name="theme-color" content="#16181c"><link rel="manifest" href="manifest.webmanifest"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>The Workbench</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -225,10 +225,20 @@ var JOBS = [
     desc: "Finds five drinks Back Bar doesn't have yet from free public sources, rewrites them in house style, writes image prompts, checks them, and pushes to pending/drinks.json. It never touches the live app; you release the batch yourself.",
     facts: [["Last run", "Nov 6, 2026"], ["Next run", "2026-11-13T13:06:57Z"], ["Model", "Sonnet 5"], ["Repo", "KrackenC/back-bar"]],
     links: [{ label: "Review pending drinks", href: "https://krackenc.github.io/back-bar/pending/" }, { label: "Manage routines", href: "https://claude.ai/code/routines" }] },
+  { title: "Workbench: refresh app dates", type: "Scheduled routine", status: ["idle", "First run pending"],
+    cron: { utcHour: 11, utcMin: 0, daily: true },
+    desc: "Checks each app's GitHub repo for its latest release, updates the Updated dates and Active/Resting labels on this page, and republishes the phone and desktop copy. Does nothing on days with no changes.",
+    facts: [["Next run", "2026-11-08T11:05:58Z"], ["Model", "Sonnet 5"], ["Repo", "KrackenC/workbench"]],
+    links: [{ label: "Manage routines", href: "https://claude.ai/code/routines" }] },
+  { title: "Workbench card sync", type: "Standing rule", status: ["ok", "On"],
+    when: ["After every", "app change"],
+    desc: "Whenever Claude updates an app or changes a routine, it also updates that card or entry here, in both copies, without asking.",
+    facts: [["Covers", "apps and routines"], ["Saved", "Nov 7, 2026"]],
+    links: [] },
   { title: "GitHub Pages mirror sync", type: "Standing rule", status: ["ok", "On"],
     when: ["After every", "app update"],
     desc: "Whenever Claude updates one of these apps, it rebuilds the no-login copy, bumps version.json, pushes to GitHub and confirms the page is live. No need to ask.",
-    facts: [["Covers", "all 5 apps"], ["Trigger", "artifact publish"]],
+    facts: [["Covers", "all 5 apps + Workbench"], ["Trigger", "artifact publish"]],
     links: [] },
   { title: "Catchall phone ↔ PC sync", type: "Built into app", status: ["ok", "Running"],
     when: ["Every 45 s", "and on edit"],
@@ -283,8 +293,9 @@ function whenFor(j) {
   if (!j.cron) return '<span class="big">' + j.when[0] + '</span><span>' + j.when[1] + '</span>';
   var ref = new Date(Date.UTC(2026, 10, 13, j.cron.utcHour, j.cron.utcMin)); // a Friday
   var local = ref.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-  var day = DAYS[ref.getDay()];
-  return '<span class="big">' + day + '</span><span>' + local + ' your time</span><span>13:00 UTC</span>';
+  var day = j.cron.daily ? "Every day" : DAYS[ref.getDay()];
+  var utc = String(j.cron.utcHour).padStart(2, "0") + ":" + String(j.cron.utcMin).padStart(2, "0") + " UTC";
+  return '<span class="big">' + day + '</span><span>' + local + ' your time</span><span>' + utc + '</span>';
 }
 function factVal(k, v) {
   if (k === "Next run") {
@@ -334,7 +345,7 @@ document.getElementById("apps").addEventListener("click", function (e) {
    Home Screen app a fresh, empty storage container). Only a page that really is the announced
    version is used, and the browser's stored copy is refreshed so the next launch opens it too. */
 (function () {
-  var CURRENT_VERSION = "6";
+  var CURRENT_VERSION = "7";
   var VERSION_KEY = "version";
   var banner = document.getElementById('__update-banner');
   var msg = document.getElementById('__update-msg');

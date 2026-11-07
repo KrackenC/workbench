@@ -224,10 +224,20 @@ var JOBS = [
     desc: "Finds five drinks Back Bar doesn't have yet from free public sources, rewrites them in house style, writes image prompts, checks them, and pushes to pending/drinks.json. It never touches the live app; you release the batch yourself.",
     facts: [["Last run", "Nov 6, 2026"], ["Next run", "2026-11-13T13:06:57Z"], ["Model", "Sonnet 5"], ["Repo", "KrackenC/back-bar"]],
     links: [{ label: "Review pending drinks", href: "https://krackenc.github.io/back-bar/pending/" }, { label: "Manage routines", href: "https://claude.ai/code/routines" }] },
+  { title: "Workbench: refresh app dates", type: "Scheduled routine", status: ["idle", "First run pending"],
+    cron: { utcHour: 11, utcMin: 0, daily: true },
+    desc: "Checks each app's GitHub repo for its latest release, updates the Updated dates and Active/Resting labels on this page, and republishes the phone and desktop copy. Does nothing on days with no changes.",
+    facts: [["Next run", "2026-11-08T11:05:58Z"], ["Model", "Sonnet 5"], ["Repo", "KrackenC/workbench"]],
+    links: [{ label: "Manage routines", href: "https://claude.ai/code/routines" }] },
+  { title: "Workbench card sync", type: "Standing rule", status: ["ok", "On"],
+    when: ["After every", "app change"],
+    desc: "Whenever Claude updates an app or changes a routine, it also updates that card or entry here, in both copies, without asking.",
+    facts: [["Covers", "apps and routines"], ["Saved", "Nov 7, 2026"]],
+    links: [] },
   { title: "GitHub Pages mirror sync", type: "Standing rule", status: ["ok", "On"],
     when: ["After every", "app update"],
     desc: "Whenever Claude updates one of these apps, it rebuilds the no-login copy, bumps version.json, pushes to GitHub and confirms the page is live. No need to ask.",
-    facts: [["Covers", "all 5 apps"], ["Trigger", "artifact publish"]],
+    facts: [["Covers", "all 5 apps + Workbench"], ["Trigger", "artifact publish"]],
     links: [] },
   { title: "Catchall phone ↔ PC sync", type: "Built into app", status: ["ok", "Running"],
     when: ["Every 45 s", "and on edit"],
@@ -282,8 +292,9 @@ function whenFor(j) {
   if (!j.cron) return '<span class="big">' + j.when[0] + '</span><span>' + j.when[1] + '</span>';
   var ref = new Date(Date.UTC(2026, 10, 13, j.cron.utcHour, j.cron.utcMin)); // a Friday
   var local = ref.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-  var day = DAYS[ref.getDay()];
-  return '<span class="big">' + day + '</span><span>' + local + ' your time</span><span>13:00 UTC</span>';
+  var day = j.cron.daily ? "Every day" : DAYS[ref.getDay()];
+  var utc = String(j.cron.utcHour).padStart(2, "0") + ":" + String(j.cron.utcMin).padStart(2, "0") + " UTC";
+  return '<span class="big">' + day + '</span><span>' + local + ' your time</span><span>' + utc + '</span>';
 }
 function factVal(k, v) {
   if (k === "Next run") {
