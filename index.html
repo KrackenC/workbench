@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="workbench-version" content="3"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="favicon.png" type="image/png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Workbench"><meta name="theme-color" content="#16181c"><link rel="manifest" href="manifest.webmanifest"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="workbench-version" content="4"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="favicon.png" type="image/png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Workbench"><meta name="theme-color" content="#16181c"><link rel="manifest" href="manifest.webmanifest"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>The Workbench</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -64,6 +64,8 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(30px, 5vw, 
 .tally { display: flex; gap: 8px; flex-wrap: wrap; font-family: var(--mono); font-size: 12.5px; }
 .tally span { background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; }
 .tally b { font-weight: 500; color: var(--accent); }
+.head-right { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+@media (hover: none) and (pointer: coarse) { .cc { display: none !important; } } /* phones can't run Claude Code */
 
 h2 { font-family: var(--display); font-weight: 700; font-size: 22px; margin: 0; }
 .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -151,7 +153,10 @@ footer { color: var(--muted); font-size: 12.5px; font-family: var(--mono); }
       <h1>The Workbench</h1>
       <p class="sub">Every app in progress, one tap away, plus the jobs that run on their own.</p>
     </div>
-    <div class="tally" id="tally"></div>
+    <div class="head-right">
+      <div class="tally" id="tally"></div>
+      <a class="btn primary cc" id="new-cc" href="#" title="Opens a new Claude Code session in Terminal">New Claude Code session</a>
+    </div>
   </header>
 
   <section aria-labelledby="apps-h">
@@ -246,6 +251,13 @@ function ago(iso) {
   return d <= 0 ? "today" : d === 1 ? "yesterday" : d + " days ago";
 }
 
+// Claude Code deep link: opens a new terminal session in the home folder (where the app memories live) with the prompt pre-typed.
+var CC_HOME = "/Users/craigcorrell";
+function ccLink(prompt) {
+  return "claude-cli://open?cwd=" + encodeURIComponent(CC_HOME) + (prompt ? "&q=" + encodeURIComponent(prompt) : "");
+}
+document.getElementById("new-cc").href = ccLink("");
+
 document.getElementById("apps").innerHTML = APPS.map(function (a, i) {
   return '<article class="app" style="--c:' + a.color + '">' +
     '<div class="app-top"><div class="glyph" aria-hidden="true">' + a.glyph + '</div>' +
@@ -259,6 +271,7 @@ document.getElementById("apps").innerHTML = APPS.map(function (a, i) {
       '<a class="btn primary" href="' + a.artifact + '" target="_blank" rel="noopener">Open</a>' +
       '<a class="btn" href="' + a.pages + '" target="_blank" rel="noopener">Phone link</a>' +
       '<button class="btn small" type="button" id="copy-' + i + '" data-url="' + a.pages + '">Copy phone link</button>' +
+      '<a class="btn small cc" href="' + ccLink("Let's work on " + a.name + ". ") + '" title="Opens a new Claude Code session in Terminal with this prompt typed in">Claude Code</a>' +
       '<a class="btn small" href="' + a.repo + '" target="_blank" rel="noopener">Repo</a>' +
       (a.extra ? '<a class="btn small" href="' + a.extra.href + '" target="_blank" rel="noopener">' + esc(a.extra.label) + '</a>' : '') +
     '</div></article>';
@@ -319,7 +332,7 @@ document.getElementById("apps").addEventListener("click", function (e) {
    Home Screen app a fresh, empty storage container). Only a page that really is the announced
    version is used, and the browser's stored copy is refreshed so the next launch opens it too. */
 (function () {
-  var CURRENT_VERSION = "3";
+  var CURRENT_VERSION = "4";
   var VERSION_KEY = "version";
   var banner = document.getElementById('__update-banner');
   var msg = document.getElementById('__update-msg');
