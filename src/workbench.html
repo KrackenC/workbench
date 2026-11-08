@@ -273,10 +273,10 @@ function ago(iso) {
   return d <= 0 ? "today" : d === 1 ? "yesterday" : d + " days ago";
 }
 
-// Claude Code deep link: opens a new terminal session in the home folder (where the app memories live) with the prompt pre-typed.
-var CC_HOME = "/Users/craigcorrell";
+// Claude Code deep link: opens a new terminal session in the home folder of whichever computer you click it on
+// (no cwd, so it works on the Mac and the Windows PCs alike), with the prompt pre-typed.
 function ccLink(prompt) {
-  return "claude-cli://open?cwd=" + encodeURIComponent(CC_HOME) + (prompt ? "&q=" + encodeURIComponent(prompt) : "");
+  return "claude-cli://open" + (prompt ? "?q=" + encodeURIComponent(prompt) : "");
 }
 document.getElementById("new-cc").href = ccLink("");
 
