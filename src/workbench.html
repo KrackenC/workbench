@@ -340,6 +340,26 @@ document.getElementById("apps").addEventListener("click", function (e) {
   } catch (err) { say(url); }
 });
 
+// Windows: Claude Code's claude-cli:// links open a window that closes at once (anthropics/claude-code#86056).
+// Until that's fixed, the Claude Code buttons copy a ready-to-paste command instead.
+var IS_WIN = /win/i.test((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "");
+if (IS_WIN) {
+  document.querySelectorAll("a.cc").forEach(function (a) { a.title = "Copies a command: paste it into PowerShell or Terminal and press Enter"; });
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest("a.cc"); if (!a) return;
+    e.preventDefault();
+    var q = (a.href.split("?q=")[1] || "");
+    var prompt = q ? decodeURIComponent(q).trim() : "";
+    var cmd = prompt ? 'claude "' + prompt.replace(/"/g, "'") + '"' : "claude";
+    function shown(msg) { say(msg); clearTimeout(tt); tt = setTimeout(function () { toast.hidden = true; }, 6000); }
+    try {
+      navigator.clipboard.writeText(cmd).then(
+        function () { shown("Copied: " + cmd + " · paste into PowerShell and press Enter"); },
+        function () { shown("Run in PowerShell: " + cmd); });
+    } catch (err) { shown("Run in PowerShell: " + cmd); }
+  });
+}
+
 // Version + manual update check. Only the GitHub/desktop copy has the updater, so the claude.ai copy keeps this hidden.
 addEventListener("load", function () {
   if (!window.__checkForUpdate) return;

@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="workbench-version" content="14"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="favicon.png" type="image/png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Workbench"><meta name="theme-color" content="#16181c"><link rel="manifest" href="manifest.webmanifest"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="workbench-version" content="15"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="favicon.png" type="image/png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Workbench"><meta name="theme-color" content="#16181c"><link rel="manifest" href="manifest.webmanifest"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>The Workbench</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -341,6 +341,26 @@ document.getElementById("apps").addEventListener("click", function (e) {
   } catch (err) { say(url); }
 });
 
+// Windows: Claude Code's claude-cli:// links open a window that closes at once (anthropics/claude-code#86056).
+// Until that's fixed, the Claude Code buttons copy a ready-to-paste command instead.
+var IS_WIN = /win/i.test((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "");
+if (IS_WIN) {
+  document.querySelectorAll("a.cc").forEach(function (a) { a.title = "Copies a command: paste it into PowerShell or Terminal and press Enter"; });
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest("a.cc"); if (!a) return;
+    e.preventDefault();
+    var q = (a.href.split("?q=")[1] || "");
+    var prompt = q ? decodeURIComponent(q).trim() : "";
+    var cmd = prompt ? 'claude "' + prompt.replace(/"/g, "'") + '"' : "claude";
+    function shown(msg) { say(msg); clearTimeout(tt); tt = setTimeout(function () { toast.hidden = true; }, 6000); }
+    try {
+      navigator.clipboard.writeText(cmd).then(
+        function () { shown("Copied: " + cmd + " · paste into PowerShell and press Enter"); },
+        function () { shown("Run in PowerShell: " + cmd); });
+    } catch (err) { shown("Run in PowerShell: " + cmd); }
+  });
+}
+
 // Version + manual update check. Only the GitHub/desktop copy has the updater, so the claude.ai copy keeps this hidden.
 addEventListener("load", function () {
   if (!window.__checkForUpdate) return;
@@ -374,7 +394,7 @@ addEventListener("load", function () {
    Home Screen app a fresh, empty storage container). Only a page that really is the announced
    version is used, and the browser's stored copy is refreshed so the next launch opens it too. */
 (function () {
-  var CURRENT_VERSION = "14";
+  var CURRENT_VERSION = "15";
   var VERSION_KEY = "version";
   var banner = document.getElementById('__update-banner');
   var msg = document.getElementById('__update-msg');
