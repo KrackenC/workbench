@@ -39,7 +39,10 @@ def best_icon(base):
 
 page = open(SRC).read()
 tmp = tempfile.mkdtemp()
-for name, repo in re.findall(r'\{ name: "([^"]+)".*?pages: "https://krackenc\.github\.io/([^/"]+)/"', page, flags=re.S):
+# one match per app object; apps with no GitHub Pages copy (Shelf & Shaker) keep their current icon
+pairs = [m.groups() for x in re.split(r'(?=\{ name: ")', page)
+         for m in [re.match(r'\{ name: "([^"]+)"[^{]*?pages: "https://krackenc\.github\.io/([^/"]+)/"', x, flags=re.S)] if m]
+for name, repo in pairs:
     raw = os.path.join(tmp, repo + '.img')
     open(raw, 'wb').write(best_icon('https://krackenc.github.io/%s/' % repo))
     jpeg = open(raw, 'rb').read(3) == b'\xff\xd8\xff'

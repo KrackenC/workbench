@@ -52,7 +52,10 @@ def main():
         return obj2
 
     # each app object starts with `{ name:` and ends at the `}` that closes it (objects contain no nested `{` except `extra`)
-    apps2 = re.sub(r'\{ name: "[^"]+".*?repo: "[^"]+"(?:,\s*extra: \{[^}]*\})?\s*\}', fix, apps, flags=re.S)
+    # apps without a repo (e.g. Shelf & Shaker, which points at its live site) keep their hand-set date
+    parts = re.split(r'(?=\{ name: ")', apps)
+    apps2 = ''.join(re.sub(r'\{ name: "[^"]+".*?repo: "[^"]+"(?:,\s*extra: \{[^}]*\})?\s*\}', fix, x, flags=re.S)
+                    if 'repo: "https://github.com/' in x else x for x in parts)
     print('\n'.join(changes) or 'No app dates changed.')
     if not changes:
         print('NO CHANGE')
