@@ -15,15 +15,19 @@ RESTING_AFTER_DAYS = 45
 MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 
-def last_change(repo):
-    url = 'https://api.github.com/repos/KrackenC/%s/commits?path=index.html&per_page=1' % repo
+def last_change(repo, branch=None):
+    # repo is "owner/name". KrackenC mirrors: latest commit touching index.html; other repos: latest commit on branch
+    if repo.startswith('KrackenC/'):
+        url = 'https://api.github.com/repos/%s/commits?path=index.html&per_page=1' % repo
+    else:
+        url = 'https://api.github.com/repos/%s/commits?per_page=1%s' % (repo, '&sha=' + branch if branch else '')
     cmd = ['curl', '-sSf', '--max-time', '30', '-H', 'Accept: application/vnd.github+json', '-H', 'User-Agent: workbench-refresh']
     token = os.environ.get('GH_TOKEN') or os.environ.get('GITHUB_TOKEN')
     if token:
         cmd += ['-H', 'Authorization: Bearer ' + token]
     commits = json.loads(subprocess.run(cmd + [url], check=True, capture_output=True, text=True).stdout)
     if not commits:
-        raise RuntimeError('no commits touching index.html in KrackenC/' + repo)
+        raise RuntimeError('no commits found in ' + repo)
     when = datetime.fromisoformat(commits[0]['commit']['committer']['date'].replace('Z', '+00:00'))
     return when.astimezone(TZ).date()
 
@@ -40,9 +44,16 @@ def main():
     def fix(m):
         obj = m.group(0)
         name = re.search(r'name: "([^"]+)"', obj).group(1)
-        repo = re.search(r'repo: "https://github\.com/KrackenC/([^"]+)"', obj).group(1)
+        repo = re.search(r'repo: "https://github\.com/([^"/]+/[^"/]+)"', obj).group(1)
+        bm = re.search(r'branch: "([^"]+)"', obj)
         old = re.search(r'updated: "(\d{4}-\d{2}-\d{2})"', obj).group(1)
-        new_date = last_change(repo)
+        try:
+            new_date = last_change(repo, bm and bm.group(1))
+        except Exception as e:
+            if repo.startswith('KrackenC/'):
+                raise
+            print('%s: could not read %s (%s); keeping %s' % (name, repo, e, old))  # private repo without a token
+            return obj
         new = new_date.isoformat()
         status = '["ok", "Active"]' if (today - new_date).days <= RESTING_AFTER_DAYS else '["idle", "Resting"]'
         obj2 = re.sub(r'updated: "\d{4}-\d{2}-\d{2}"', 'updated: "%s"' % new, obj)
@@ -52,9 +63,9 @@ def main():
         return obj2
 
     # each app object starts with `{ name:` and ends at the `}` that closes it (objects contain no nested `{` except `extra`)
-    # apps without a repo (e.g. Shelf & Shaker, which points at its live site) keep their hand-set date
+    # apps without a repo keep their hand-set date; private repos the routine can't read keep theirs too
     parts = re.split(r'(?=\{ name: ")', apps)
-    apps2 = ''.join(re.sub(r'\{ name: "[^"]+".*?repo: "[^"]+"(?:,\s*extra: \{[^}]*\})?\s*\}', fix, x, flags=re.S)
+    apps2 = ''.join(re.sub(r'\{ name: "[^"]+".*\}', fix, x, count=1, flags=re.S)
                     if 'repo: "https://github.com/' in x else x for x in parts)
     print('\n'.join(changes) or 'No app dates changed.')
     if not changes:
