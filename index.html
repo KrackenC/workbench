@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="workbench-version" content="17"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="favicon.png" type="image/png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Workbench"><meta name="theme-color" content="#16181c"><link rel="manifest" href="manifest.webmanifest"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="workbench-version" content="18"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="favicon.png" type="image/png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Workbench"><meta name="theme-color" content="#16181c"><link rel="manifest" href="manifest.webmanifest"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>The Workbench</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -234,7 +234,7 @@ var JOBS = [
     cron: { utcHour: 13, utcMin: 0, monthDay: 1 },
     desc: "On the 1st of each month, picks 10 distinctive drinks that each add something the catalog lacks (a new spirit, technique or region, never a variation), cross-checks specs on free public sources, rewrites them in house style, writes image prompts and pushes them to pending/drinks.json. Variations go to reserve. Each run opens by asking you to release last month's held list; at most 10 drinks reach the app per month, and any extras wait for the next release.",
     facts: [["Last run", "Nov 6, 2026"], ["Next run", "2026-12-01T13:06:57Z"], ["Model", "Sonnet 5"], ["Repo", "KrackenC/back-bar"]],
-    links: [{ label: "Review pending drinks", href: "https://krackenc.github.io/back-bar/pending/" }, { label: "Manage routines", href: "https://claude.ai/code/routines" }] },
+    links: [{ label: "Manage routines", href: "https://claude.ai/code/routines" }] },
   { title: "Workbench: refresh app dates", type: "Scheduled routine", status: ["idle", "First run pending"],
     cron: { utcHour: 11, utcMin: 0, daily: true },
     desc: "Checks each app's GitHub repo for its latest release, updates the Updated dates and Active/Resting labels on this page, and republishes the phone and desktop copy. Does nothing on days with no changes.",
@@ -394,7 +394,7 @@ addEventListener("load", function () {
    Home Screen app a fresh, empty storage container). Only a page that really is the announced
    version is used, and the browser's stored copy is refreshed so the next launch opens it too. */
 (function () {
-  var CURRENT_VERSION = "17";
+  var CURRENT_VERSION = "18";
   var VERSION_KEY = "version";
   var banner = document.getElementById('__update-banner');
   var msg = document.getElementById('__update-msg');

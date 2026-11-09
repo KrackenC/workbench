@@ -233,7 +233,7 @@ var JOBS = [
     cron: { utcHour: 13, utcMin: 0, monthDay: 1 },
     desc: "On the 1st of each month, picks 10 distinctive drinks that each add something the catalog lacks (a new spirit, technique or region, never a variation), cross-checks specs on free public sources, rewrites them in house style, writes image prompts and pushes them to pending/drinks.json. Variations go to reserve. Each run opens by asking you to release last month's held list; at most 10 drinks reach the app per month, and any extras wait for the next release.",
     facts: [["Last run", "Nov 6, 2026"], ["Next run", "2026-12-01T13:06:57Z"], ["Model", "Sonnet 5"], ["Repo", "KrackenC/back-bar"]],
-    links: [{ label: "Review pending drinks", href: "https://krackenc.github.io/back-bar/pending/" }, { label: "Manage routines", href: "https://claude.ai/code/routines" }] },
+    links: [{ label: "Manage routines", href: "https://claude.ai/code/routines" }] },
   { title: "Workbench: refresh app dates", type: "Scheduled routine", status: ["idle", "First run pending"],
     cron: { utcHour: 11, utcMin: 0, daily: true },
     desc: "Checks each app's GitHub repo for its latest release, updates the Updated dates and Active/Resting labels on this page, and republishes the phone and desktop copy. Does nothing on days with no changes.",
