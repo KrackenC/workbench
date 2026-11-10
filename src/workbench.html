@@ -65,6 +65,7 @@ h1 { display: flex; align-items: center; gap: 0.3em; font-family: var(--display)
 .tally span { background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; }
 .tally b { font-weight: 500; color: var(--accent); }
 .head-right { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+[hidden] { display: none !important; }
 @media (hover: none) and (pointer: coarse) { .cc { display: none !important; } } /* phones can't run Claude Code */
 
 h2 { font-family: var(--display); font-weight: 700; font-size: 22px; margin: 0; }
@@ -160,6 +161,7 @@ footer p { margin: 0; }
     <div class="head-right">
       <div class="tally" id="tally"></div>
       <a class="btn primary cc" id="new-cc" href="#" title="Opens a new Claude Code session in Terminal">New Claude Code session</a>
+      <button class="btn small cc" type="button" id="win-setup" hidden title="One-time setup so the Claude Code buttons open Claude Code directly on this PC">Set up this PC</button>
     </div>
   </header>
 
@@ -343,22 +345,23 @@ document.getElementById("apps").addEventListener("click", function (e) {
 });
 
 // Windows: Claude Code's claude-cli:// links open a window that closes at once (anthropics/claude-code#86056).
-// Until that's fixed, the Claude Code buttons copy a ready-to-paste command instead.
+// So on Windows the buttons use workbench-claude:// instead, a link type registered by a one-time setup
+// (windows/install.ps1 in the workbench repo) that opens Windows Terminal with Claude Code running.
 var IS_WIN = /win/i.test((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "");
+var WIN_SETUP = "irm https://raw.githubusercontent.com/KrackenC/workbench/main/windows/install.ps1 | iex";
 if (IS_WIN) {
-  document.querySelectorAll("a.cc").forEach(function (a) { a.title = "Copies a command: paste it into PowerShell or Terminal and press Enter"; });
-  document.addEventListener("click", function (e) {
-    var a = e.target.closest("a.cc"); if (!a) return;
-    e.preventDefault();
-    var q = (a.href.split("?q=")[1] || "");
-    var prompt = q ? decodeURIComponent(q).trim() : "";
-    var cmd = prompt ? 'claude "' + prompt.replace(/"/g, "'") + '"' : "claude";
-    function shown(msg) { say(msg); clearTimeout(tt); tt = setTimeout(function () { toast.hidden = true; }, 6000); }
+  document.querySelectorAll("a.cc").forEach(function (a) {
+    a.href = a.href.replace(/^claude-cli:\/\/open/, "workbench-claude://open");
+    a.title = "Opens Claude Code in Windows Terminal (needs the one-time \u201cSet up this PC\u201d step)";
+  });
+  var setup = document.getElementById("win-setup");
+  setup.hidden = false;
+  setup.addEventListener("click", function () {
+    function shown(msg) { say(msg); clearTimeout(tt); tt = setTimeout(function () { toast.hidden = true; }, 9000); }
+    var msg = "Copied the setup command. Open PowerShell, paste it, press Enter. Only needed once per PC.";
     try {
-      navigator.clipboard.writeText(cmd).then(
-        function () { shown("Copied: " + cmd + " · paste into PowerShell and press Enter"); },
-        function () { shown("Run in PowerShell: " + cmd); });
-    } catch (err) { shown("Run in PowerShell: " + cmd); }
+      navigator.clipboard.writeText(WIN_SETUP).then(function () { shown(msg); }, function () { shown("Run once in PowerShell: " + WIN_SETUP); });
+    } catch (err) { shown("Run once in PowerShell: " + WIN_SETUP); }
   });
 }
 
