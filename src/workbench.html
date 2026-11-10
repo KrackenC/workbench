@@ -183,6 +183,7 @@ footer p { margin: 0; }
 
   <footer>
     <p>Dates refreshed Nov 7, 2026. App dates update daily from GitHub; everything else updates when Claude changes an app or routine.</p>
+    <p id="win-again" hidden>This PC is set up to open Claude Code directly. <button class="btn small" type="button" id="win-again-btn">Set up this PC again</button></p>
     <p class="ver-row" id="ver-row" hidden>Version <span id="ver-num"></span>. Updates install themselves when you open or return to the app. <button class="btn small" type="button" id="check-upd">Check for updates</button> <span id="upd-status" role="status"></span></p>
   </footer>
 </div>
@@ -349,20 +350,42 @@ document.getElementById("apps").addEventListener("click", function (e) {
 // (windows/install.ps1 in the workbench repo) that opens Windows Terminal with Claude Code running.
 var IS_WIN = /win/i.test((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "");
 var WIN_SETUP = "irm https://raw.githubusercontent.com/KrackenC/workbench/main/windows/install.ps1 | iex";
+// Bump LAUNCHER_VER (and the #pc-ready-N link at the end of install.ps1) whenever install.ps1 changes,
+// so PCs that ran an older setup see the button again as "Update this PC".
+var LAUNCHER_VER = 2, PC_KEY = "workbench.pcLauncher";
+function pcVer() { try { return +localStorage.getItem(PC_KEY) || 0; } catch (e) { return 0; } }
+function setPcVer(v) { try { localStorage.setItem(PC_KEY, String(v)); } catch (e) {} }
 if (IS_WIN) {
+  var setup = document.getElementById("win-setup"), again = document.getElementById("win-again");
+  function showSetup() {
+    var v = pcVer(), done = v >= LAUNCHER_VER;
+    setup.hidden = done;
+    setup.textContent = v && !done ? "Update this PC" : "Set up this PC";
+    again.hidden = !done;
+  }
+  // The setup command opens the Workbench at #pc-ready-N when it finishes.
+  var m = /^#pc-ready-(\d+)$/.exec(location.hash);
+  if (m) {
+    setPcVer(Math.max(pcVer(), +m[1]));
+    history.replaceState(null, "", location.pathname + location.search);
+    setTimeout(function () { say("This PC is set up. Claude Code buttons open Claude Code directly."); }, 300);
+  }
   document.querySelectorAll("a.cc").forEach(function (a) {
     a.href = a.href.replace(/^claude-cli:\/\/open/, "workbench-claude://open");
     a.title = "Opens Claude Code in Windows Terminal with this prompt typed in (needs the one-time \u201cSet up this PC\u201d step)";
+    // Using a button means the setup was done (covers PCs set up before this check existed).
+    a.addEventListener("click", function () { if (!pcVer()) { setPcVer(LAUNCHER_VER); showSetup(); } });
   });
-  var setup = document.getElementById("win-setup");
-  setup.hidden = false;
-  setup.addEventListener("click", function () {
+  function copySetup() {
     function shown(msg) { say(msg); clearTimeout(tt); tt = setTimeout(function () { toast.hidden = true; }, 9000); }
-    var msg = "Copied the setup command. Open PowerShell, paste it, press Enter. Needed once per PC (run it again after a launcher update).";
+    var msg = "Copied the setup command. Open PowerShell, paste it, press Enter.";
     try {
       navigator.clipboard.writeText(WIN_SETUP).then(function () { shown(msg); }, function () { shown("Run once in PowerShell: " + WIN_SETUP); });
     } catch (err) { shown("Run once in PowerShell: " + WIN_SETUP); }
-  });
+  }
+  setup.addEventListener("click", copySetup);
+  document.getElementById("win-again-btn").addEventListener("click", copySetup);
+  showSetup();
 }
 
 // Version + manual update check. Only the GitHub/desktop copy has the updater, so the claude.ai copy keeps this hidden.

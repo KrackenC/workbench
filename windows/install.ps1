@@ -65,5 +65,8 @@ Write-Host 'Workbench Claude Code launcher installed (prompts arrive pre-typed, 
 if (-not $found -and -not (Test-Path (Join-Path $env:USERPROFILE '.local\bin\claude.exe'))) {
   Write-Host 'Note: claude.exe was not found on this PC yet. Install Claude Code before using the buttons.' -ForegroundColor Yellow
 }
-Write-Host 'Reload the Workbench page, then click any Claude Code button.'
-Write-Host 'The first time, Chrome or Edge asks to open the link: tick "Always allow" and click Open.'
+Write-Host 'The first time you click a Claude Code button, Chrome or Edge asks to open the link: tick "Always allow" and click Open.'
+Write-Host 'Opening the Workbench so it knows this PC is set up...'
+# Tells the page this PC has launcher version 2, which hides its "Set up this PC" button.
+# Keep the number in step with LAUNCHER_VER in src/workbench.html.
+Start-Process 'https://krackenc.github.io/workbench/#pc-ready-2'
