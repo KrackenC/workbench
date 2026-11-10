@@ -2,7 +2,8 @@
 #
 # Why: Claude Code's own claude-cli:// links open a terminal that closes at once on Windows
 # (anthropics/claude-code#86056). This registers a separate link type, workbench-claude://,
-# that opens Windows Terminal (or PowerShell) with Claude Code running in your home folder.
+# that opens Windows Terminal (or PowerShell) with Claude Code running in your home folder and the
+# Workbench prompt pre-typed in the input box (claude --prefill), waiting for you to press Enter.
 #
 # Install:   irm https://raw.githubusercontent.com/KrackenC/workbench/main/windows/install.ps1 | iex
 # Remove:    Remove-Item -Recurse HKCU:\Software\Classes\workbench-claude; Remove-Item -Recurse "$env:LOCALAPPDATA\Workbench"
@@ -35,7 +36,7 @@ try {
 
   $q = { param($s) "'" + $s.Replace("'", "''") + "'" }
   $inner = "Set-Location -LiteralPath `$HOME; `$p = [IO.File]::ReadAllText($(& $q $tmp)); Remove-Item -LiteralPath $(& $q $tmp); " +
-           "if (`$p) { & $(& $q $claude) `$p } else { & $(& $q $claude) }"
+           "if (`$p) { & $(& $q $claude) --prefill `$p } else { & $(& $q $claude) }"
   $enc = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($inner))
 
   $wt = Get-Command wt.exe -ErrorAction SilentlyContinue
@@ -60,7 +61,7 @@ Set-ItemProperty -Path "$key\shell\open\command" -Name '(Default)' -Value $cmd
 
 $found = Get-Command claude.exe -ErrorAction SilentlyContinue
 Write-Host ''
-Write-Host 'Workbench Claude Code launcher installed.' -ForegroundColor Green
+Write-Host 'Workbench Claude Code launcher installed (prompts arrive pre-typed, not sent).' -ForegroundColor Green
 if (-not $found -and -not (Test-Path (Join-Path $env:USERPROFILE '.local\bin\claude.exe'))) {
   Write-Host 'Note: claude.exe was not found on this PC yet. Install Claude Code before using the buttons.' -ForegroundColor Yellow
 }

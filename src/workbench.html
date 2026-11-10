@@ -352,13 +352,13 @@ var WIN_SETUP = "irm https://raw.githubusercontent.com/KrackenC/workbench/main/w
 if (IS_WIN) {
   document.querySelectorAll("a.cc").forEach(function (a) {
     a.href = a.href.replace(/^claude-cli:\/\/open/, "workbench-claude://open");
-    a.title = "Opens Claude Code in Windows Terminal (needs the one-time \u201cSet up this PC\u201d step)";
+    a.title = "Opens Claude Code in Windows Terminal with this prompt typed in (needs the one-time \u201cSet up this PC\u201d step)";
   });
   var setup = document.getElementById("win-setup");
   setup.hidden = false;
   setup.addEventListener("click", function () {
     function shown(msg) { say(msg); clearTimeout(tt); tt = setTimeout(function () { toast.hidden = true; }, 9000); }
-    var msg = "Copied the setup command. Open PowerShell, paste it, press Enter. Only needed once per PC.";
+    var msg = "Copied the setup command. Open PowerShell, paste it, press Enter. Needed once per PC (run it again after a launcher update).";
     try {
       navigator.clipboard.writeText(WIN_SETUP).then(function () { shown(msg); }, function () { shown("Run once in PowerShell: " + WIN_SETUP); });
     } catch (err) { shown("Run once in PowerShell: " + WIN_SETUP); }
